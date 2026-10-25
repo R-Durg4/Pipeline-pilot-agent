@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PipelinePilot | CI/CD Failure Analyzer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">INDEPENDENT DEVOPS PORTFOLIO PROJECT</p>
+      <h1>Pipeline<span>Pilot</span></h1>
+      <p class="intro">A lightweight, rule-based assistant for diagnosing common CI/CD pipeline failures.</p>
+      <div class="chips"><span>Python</span><span>Flask</span><span>GitHub Actions</span><span>Docker</span></div>
+    </header>
+
+    <section class="panel">
+      <h2>Analyze a pipeline log</h2>
+      <p class="muted">Try the sample or paste a sanitized log snippet. Do not enter secrets, tokens, or confidential logs.</p>
+      <form action="{{ url_for('analyze') }}" method="post">
+        <textarea name="log_text" rows="10" maxlength="20000" placeholder="Paste a CI/CD error log here...">{{ log_text }}</textarea>
+        <div class="actions">
+          <button type="button" class="secondary" id="sample">Load sample log</button>
+          <button type="submit">Analyze log <span aria-hidden="true">→</span></button>
+        </div>
+      </form>
+    </section>
+
+    {% if result %}
+    <section class="panel result" aria-live="polite">
+      <p class="eyebrow">ANALYSIS RESULT</p>
+      <h2>{{ result.summary }}</h2>
+      {% if result.matches %}
+        {% for match in result.matches %}
+        <article class="finding">
+          <h3>{{ match.title }}</h3>
+          <p>{{ match.cause }}</p>
+          <p class="label">Matched signals: {% for signal in match.signals %}<code>{{ signal }}</code> {% endfor %}</p>
+          <h4>Suggested checks</h4>
+          <ol>{% for step in match.steps %}<li>{{ step }}</li>{% endfor %}</ol>
+        </article>
+        {% endfor %}
+      {% else %}
+        <p>{{ result.note }}</p>
+      {% endif %}
+      {% if result.matches %}<p class="notice">{{ result.note }}</p>{% endif %}
+    </section>
+    {% endif %}
+
+    <section class="how">
+      <h2>How it works</h2>
+      <div class="steps">
+        <div><b>01</b><h3>Input</h3><p>Paste a short, sanitized build log.</p></div>
+        <div><b>02</b><h3>Detect</h3><p>Rules search for common failure signals.</p></div>
+        <div><b>03</b><h3>Investigate</h3><p>Review suggested checks before changing anything.</p></div>
+      </div>
+    </section>
+    <footer>PipelinePilot is a demo tool. It does not connect to GitHub, execute commands, deploy software, or apply code fixes.</footer>
+  </main>
+  <script>
+    document.getElementById("sample").addEventListener("click", function () {
+      document.querySelector("textarea[name='log_text']").value =
+`Run pytest
+============================= test session starts =============================
+tests/test_checkout.py F
+E   AssertionError: expected status 200, received 500
+=========================== short test summary info ===========================
+FAILED tests/test_checkout.py::test_checkout_success
+Error: Process completed with exit code 1`;
+    });
+  </script>
+</body>
+</html>
